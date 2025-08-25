@@ -1,6 +1,6 @@
 document.addEventListener('contextmenu', function (e) {
     e.preventDefault(); // Optional: prevent default right-click menu
-    window.pywebview.api.close_app();
+    window.pywebview.api.close();
 });
 
 askbai = false
