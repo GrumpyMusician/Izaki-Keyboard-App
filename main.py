@@ -1,104 +1,55 @@
-import os
-import pandas as pd
+import requests
+import csv
 import json
-import webview
-import threading
-import subprocess
-import socket
-import signal
-import psutil   # pip install psutil
+from hotkeys import hotkeys
+from plyer import notification
 
-# -------------------------
-# 1. Fetch Latinized Mappings from Google Sheet
-# -------------------------
-sheet_url = "https://docs.google.com/spreadsheets/d/16X5QlpYoW5aToM6LoJlEZ8K0XvmlasJArD0vYzFOZ3Y/export?format=csv&gid=1653244319"
-latinized = dict(zip(
-    pd.read_csv(sheet_url, header=None)[0].astype(str),
-    pd.read_csv(sheet_url, header=None)[1].astype(str)
-))
+def main():
 
-with open("latinized.json", "w", encoding="utf-8") as f:
-    json.dump(latinized, f, ensure_ascii=False, indent=2)
-
-# -------------------------
-# 2. Shared state for AHK socket
-# -------------------------
-keyboard_state = {"mode": "System", "keys": []}
-
-def socket_server(host="127.0.0.1", port=5005):
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind((host, port))
-    s.listen(1)
-    print(f"Socket listening on {host}:{port}")
-    conn, addr = s.accept()
-    print(f"Connected by {addr}")
-    with conn:
-        while True:
-            data = conn.recv(1024)
-            if not data:
-                break
-            try:
-                msg = json.loads(data.decode())
-                keyboard_state["mode"] = msg.get("mode", keyboard_state["mode"])
-                keyboard_state["keys"] = msg.get("keys", keyboard_state["keys"])
-                print("Updated keyboard state:", keyboard_state)
-            except Exception as e:
-                print("Error decoding message:", e)
-
-threading.Thread(target=socket_server, daemon=True).start()
-
-# -------------------------
-# 3. Webview for live keyboard
-# -------------------------
-class API:
-    def get_state(self):
-        return keyboard_state
-    
-    def close(self):
-        webview.windows[0].destroy()
-
-api = API()
-file_path = os.path.abspath("index.html")
-
-window = webview.create_window(
-    "Izaki Keyboard",
-    f"file://{file_path}",
-    width=630,
-    height=310,
-    frameless=True,
-    on_top=True,
-    js_api=api
-)
-
-# -------------------------
-# 4. Launch AHK v2 script automatically
-# -------------------------
-ahk_exe = os.path.join(os.getcwd(), "AutoHotkey.exe")
-ahk_script = os.path.join(os.getcwd(), "keyboard.ahk")
-ahk_proc = subprocess.Popen([ahk_exe, ahk_script], shell=True)
-
-# -------------------------
-# 5. Ensure AHK is killed when Python exits
-# -------------------------
-def kill_ahk():
     try:
-        # If we started it, kill that process
-        ahk_proc.terminate()
-    except Exception:
-        pass
+        importtojson("https://docs.google.com/spreadsheets/d/16X5QlpYoW5aToM6LoJlEZ8K0XvmlasJArD0vYzFOZ3Y/export?format=csv&gid=457897588", "master.json")
+    except requests.exceptions.ConnectionError as e:
+        notification.notify(title='Internet Connection Error', message="Uh-oh! This program can not extract the latest set of keymappings without internet. Don't worry! It'll still run the last set of keymappings.", app_icon= "icon.ico", timeout=10)
+    except requests.exceptions.Timeout as e:
+        notification.notify(title='Internet Timeout Error', message="Uh-oh! This program can not extract the latest set of keymappings without internet. Don't worry! It'll still run since the last set of keymappings.", app_icon= "icon.ico", timeout=10)
+    except requests.exceptions.RequestException as e:
+        notification.notify(title='Internet Request Exception Error', message="Uh-oh! This program can not extract the latest set of keymappings without internet. Don't worry! It'll still run since the last set of keymappings.", app_icon= "icon.ico", timeout=10)
 
-    # Extra safety: kill any stray AutoHotkey.exe processes
-    for proc in psutil.process_iter(["pid", "name"]):
-        if proc.info["name"] and "AutoHotkey.exe" in proc.info["name"]:
-            try:
-                os.kill(proc.info["pid"], signal.SIGTERM)
-            except Exception:
-                pass
+    data = getfromjson("master.json")
 
-import atexit
-atexit.register(kill_ahk)
+    print("Hotkey program initated!")
 
-# -------------------------
-# 6. Run the UI
-# -------------------------
-webview.start()
+    hotkey = hotkeys(data)
+
+def importtojson(url, target):
+    response = requests.get(url)
+    response.raise_for_status()
+
+    csv_text = response.content.decode('utf-8').splitlines()
+
+    reader = csv.DictReader(csv_text)
+
+    data = {}
+
+    for row in reader:
+        key = row[reader.fieldnames[0]]
+        nested = {k: v for k, v in row.items() if k != reader.fieldnames[0]}
+        data[key] = nested
+
+    with open(target, "w", encoding = "utf-8") as file:
+        file.write("{\n")
+        items = list(data.items())
+        for i, (key, value) in enumerate(items):
+            json_value = json.dumps(value, ensure_ascii = False)
+            if i < len(items) - 1:
+                file.write(f'  "{key}": {json_value},\n')
+            else:
+                file.write(f'  "{key}": {json_value}\n')
+        file.write('}\n')
+def getfromjson(target):
+    with open(target, "r", encoding = "utf-8") as file:
+        data = json.load(file)
+
+    return data
+
+main()
