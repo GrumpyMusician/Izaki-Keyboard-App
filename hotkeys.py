@@ -25,12 +25,9 @@ class hotkeys:
                     self.refchar = key
                     break
 
-        if self.refchar == " ":
-            self.refchar = "δ"
+                self.refchar = "δ"
 
         print(self.refchar, ", ", self.buffer)
-
-        
 
     def keyboardtype(self, character):
         self.setrefchar()
