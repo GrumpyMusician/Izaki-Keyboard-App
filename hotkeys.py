@@ -14,32 +14,42 @@ class hotkeys:
         self.setrefchar()
         self.keys = list(dictionary.keys())
 
-        self.initAHK()
+        self.initAHK() 
+
+    def getCurrentMap(self):
+        return self.refs[self.refchar]
 
     def setrefchar(self):
         if self.buffer == "":
             self.refchar = "δ"
         else:
-            for key in self.keys:  # keep your defined order
+            self.refchar = "δ"
+            for key in self.keys:
                 if self.buffer.endswith(key):
                     self.refchar = key
                     break
 
-                self.refchar = "δ"
+        print(self.refchar)
 
-        print(self.refchar, ", ", self.buffer)
+    def keyboardtype(self, character, infLoopRisk = False):
 
-    def keyboardtype(self, character):
-        self.setrefchar()
         for i in range(int(character[-1])):
             self.ahk.key_press('backspace')
+            self.buffer = self.buffer[:-1]
 
-        self.ahk.type(character[:-1])
-        self.buffer += character[:-1]
+        if infLoopRisk:
+            self.keyboard.write(character[:-1])
+            self.buffer += character[:-1]
+
+        else: 
+            self.ahk.send_input(character[:-1])
+            self.buffer += character[:-1]
 
         self.setrefchar()
 
     def initAHK(self):
+        self.setrefchar()
+
         self.ahk.add_hotkey('+4', callback = self.ahkDollar)
 
         self.ahk.add_hotkey('q', callback = self.ahkq)
@@ -125,7 +135,8 @@ class hotkeys:
         self.ahk.add_hotkey('!', callback = self.ahkExclamation)
         self.ahk.add_hotkey('?', callback = self.ahkQuestion)
 
-        self.keyboard.add_hotkey('space', self.keyboardSpace)
+        self.ahk.add_hotkey('space', callback = self.keyboardSpace)
+
         self.keyboard.add_hotkey('backspace', self.keyboardBackspace)
         
         self.mouse.on_click(self.mouseMouse)
@@ -299,13 +310,13 @@ class hotkeys:
         self.keyboardtype(self.refs[self.refchar]["."])
 
     def ahkExclamation(self):
-        self.keyboardtype(self.refs[self.refchar]["!"])
+        self.keyboardtype(self.refs[self.refchar]["!"], infLoopRisk = True)
 
     def ahkQuestion(self):
         self.keyboardtype(self.refs[self.refchar]["?"])
 
     def keyboardSpace(self):
-        self.buffer = self.buffer + " "
+        self.keyboardtype(self.refs[self.refchar][" "], infLoopRisk = True)
 
     def keyboardBackspace(self):
         self.buffer = self.buffer[:-1]
@@ -314,3 +325,4 @@ class hotkeys:
     def mouseMouse(self):
         self.buffer = ""
         self.setrefchar()
+
