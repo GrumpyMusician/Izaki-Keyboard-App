@@ -1,23 +1,30 @@
 from ahk import AHK
 import keyboard
 import mouse
+import threading
+import json
 
-class hotkeys:
-    def __init__(self, dictionary):
+class hotkeys(threading.Thread):
+    def __init__(self, target):
+
+        super().__init__(daemon=True)  # make this thread a daemon thread
+
         self.ahk = AHK()
         self.keyboard = keyboard
         self.mouse = mouse
+        self.target = target
 
-        self.refs = dictionary
+        with open(self.target, "r", encoding = "utf-8") as file:
+            self.dictionary = json.load(file)
+
+        self.refs = self.dictionary
         self.buffer = ""
         self.refchar = ""
         self.setrefchar()
-        self.keys = list(dictionary.keys())
+        self.keys = list(self.dictionary.keys())
 
+    def run(self):
         self.initAHK() 
-
-    def getCurrentMap(self):
-        return self.refs[self.refchar]
 
     def setrefchar(self):
         if self.buffer == "":
@@ -29,10 +36,12 @@ class hotkeys:
                     self.refchar = key
                     break
 
-        print(self.refchar)
+        #print(self.refchar)
+
+    def getCurrentMap(self):
+        return self.refs[self.refchar]
 
     def keyboardtype(self, character, infLoopRisk = False):
-
         for i in range(int(character[-1])):
             self.ahk.key_press('backspace')
             self.buffer = self.buffer[:-1]
