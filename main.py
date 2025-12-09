@@ -18,7 +18,7 @@ def main():
     runwebview()
 
 def runhandler():
-    ahkhandler.ahkhandler(getJSON(), sendMode, sendMaps, keyIn, keyOut)
+    ahkhandler.ahkhandler(getJSON(), sendMode, sendMaps, keyIn, keyOut, setLoad)
     
 def runwebview():
     global window
@@ -39,13 +39,15 @@ def sendMaps(mapList):
 
 def keyIn(keyName):
     global window
-    print("in", keyName)
     window.evaluate_js(f'keyIn("{keyName}")')
 
 def keyOut(keyName):
     global window
-    print("out", keyName)
     window.evaluate_js(f'keyOut("{keyName}")')
+
+def setLoad(hide):
+    global window
+    window.evaluate_js(f'setLoad("{hide}")')
 
 def updateJSON():
     try:

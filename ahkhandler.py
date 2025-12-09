@@ -2,12 +2,13 @@ from ahk import AHK
 import keyboard
 
 class ahkhandler:
-    def __init__(self, data, sendMode, sendMaps, keyIn, keyOut):
+    def __init__(self, data, sendMode, sendMaps, keyIn, keyOut, setLoad):
         self.data = data
         self.sendMode = sendMode
         self.sendMaps = sendMaps
         self.keyIn = keyIn
         self.keyOut = keyOut
+        self.setLoad = setLoad
 
         self.ahk = AHK()
         self.keyboard = keyboard
@@ -34,11 +35,13 @@ class ahkhandler:
 
         #print("start")
 
+        self.setLoad(1)
         self.ahk.start_hotkeys()
         self.sendMode(0)
         self.setHotKeys()
         self.ahk.stop_hotkeys()
         self.setBopprehKeys()
+        self.setLoad(0)
 
     def incrementMode(self):
         if self.mode == 3:
@@ -55,9 +58,11 @@ class ahkhandler:
         elif self.mode == 2:
             self.refChar = "δ"
         elif self.mode == 3:
+            self.setLoad(1)
             self.refChar = "φ"
             self.ahk.stop_hotkeys()
             self.setBopprehKeys()
+            self.setLoad(0)
 
         self.setRefChar()
         #print(self.mode)
@@ -105,7 +110,6 @@ class ahkhandler:
             if key[0] != "+":
                 self.keyboard.on_press_key(key, lambda e, k=key: self.keyIn(k))
                 self.keyboard.on_release_key(key, lambda e, k=key: self.keyOut(k))
-
 
     def clearBopprehKeys(self): 
         for key in self.data["λ"]:

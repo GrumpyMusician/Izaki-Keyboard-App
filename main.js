@@ -3,8 +3,8 @@ document.addEventListener('contextmenu', function (e) {
     window.pywebview.api.close();
 });
 
-function hideSpecial(isHide){
-    if (isHide){
+function hideSpecial(hide){
+    if (hide){
         document.querySelectorAll('.specialchars').forEach(element => {
             element.style.opacity = '0';  
         });
@@ -12,6 +12,14 @@ function hideSpecial(isHide){
         document.querySelectorAll('.specialchars').forEach(element => {
             element.style.opacity = '1';  
         });
+    }
+}
+
+window.setLoad = function(hide){
+    if (hide == 0){
+        document.getElementById("loadingScreen").style.display = 'none'; 
+    } else if (hide == 1) {
+        document.getElementById("loadingScreen").style.display = 'flex'; 
     }
 }
 
