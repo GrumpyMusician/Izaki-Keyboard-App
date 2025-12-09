@@ -23,6 +23,14 @@ window.setLoad = function(hide){
     }
 }
 
+window.setIdle = function(hide){
+    if (hide == 0){
+        document.getElementById("idleScreen").style.display = 'none'; 
+    } else if (hide == 1) {
+        document.getElementById("idleScreen").style.display = 'flex'; 
+    }
+}
+
 window.setMode = function(modeNum){
     if (modeNum === 0){
         hideSpecial(true)
