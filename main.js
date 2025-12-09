@@ -3,40 +3,62 @@ document.addEventListener('contextmenu', function (e) {
     window.pywebview.api.close();
 });
 
+function hideSpecial(isHide){
+    if (isHide){
+        document.querySelectorAll('.specialchars').forEach(element => {
+            element.style.opacity = '0';  
+        });
+    } else {
+        document.querySelectorAll('.specialchars').forEach(element => {
+            element.style.opacity = '1';  
+        });
+    }
+}
+
+window.setMode = function(modeNum){
+    if (modeNum === 0){
+        hideSpecial(true)
+        document.getElementById("systat").setAttribute("fill", "#86A788");
+        document.getElementById("baistat").setAttribute("fill", "#3F72AF");
+    } else if (modeNum === 1){
+        hideSpecial(false)
+        document.getElementById("latinstat").setAttribute("fill", "#86A788");
+        document.getElementById("systat").setAttribute("fill", "#3F72AF");
+    } else if (modeNum === 2){
+        document.getElementById("askaozastat").setAttribute("fill", "#86A788");
+        document.getElementById("latinstat").setAttribute("fill", "#3F72AF");
+    } else if (modeNum === 3){
+        hideSpecial(true)
+        document.getElementById("baistat").setAttribute("fill", "#86A788");
+        document.getElementById("askaozastat").setAttribute("fill", "#3F72AF");
+    }
+}
+
 window.keyIn = function(key) {
     try {
-        document.getElementById(key).setAttribute("fill", "#86A788");
+        document.getElementById(removeLeadingPlus(key)).setAttribute("fill", "#86A788");
     } catch (error) {}
 };
 
 window.keyOut = function(key) {
     try {
-        document.getElementById(key).setAttribute("fill", "#3F72AF");
+        document.getElementById(removeLeadingPlus(key)).setAttribute("fill", "#3F72AF");
     } catch (error){}
 };
 
 window.updateMapping = function(keyMap){
     for (const key in keyMap) {
         try {
-            document.getElementById(key).nextElementSibling.textContent = keyMap[key].slice(0, -1);
+            if (key != "tab"){
+                document.getElementById(key).nextElementSibling.textContent = keyMap[key].slice(0, -1);
+            }
         } catch (error){}
     }
 };
 
-function flattenExtraneousKey(name) {
-    const shiftMap = {
-        '!': '1',
-        '@': '2',
-        '#': '3',
-        '$': '4',
-        '%': '5',
-        '^': '6',
-        '&': '7',
-        '*': '8',
-        '(': '9',
-        ')': '0',
-        "?": "/"
-    };
-
-  return shiftMap[name] || name;
+function removeLeadingPlus(key) {
+    if (key.startsWith("+")) {
+        return key.slice(1);
+    }
+    return key;
 }

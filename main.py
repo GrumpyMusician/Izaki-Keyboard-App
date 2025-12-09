@@ -2,9 +2,11 @@ import requests
 import csv
 import json
 from plyer import notification
-import handler
+import ahkhandler
 import threading
 import webview
+
+window = None
 
 def main():
     updateJSON()
@@ -16,15 +18,34 @@ def main():
     runwebview()
 
 def runhandler():
-    ahkhandler = handler.handler(getJSON())
-
+    ahkhandler.ahkhandler(getJSON(), sendMode, sendMaps, keyIn, keyOut)
+    
 def runwebview():
+    global window
     class API:
         def close(self):
             webview.windows[0].destroy()
 
-    window = webview.create_window("Izaki Keyboard", "index.html", width=580, height=320, frameless=True, on_top=True, js_api = API())
-    webview.start()
+    window = webview.create_window("Izaki Keyboard", "index.html", width=630, height=320, frameless=True, on_top=True, js_api = API())
+    webview.start() 
+
+def sendMode(modeNum):
+    global window
+    window.evaluate_js(f'setMode({modeNum})')
+
+def sendMaps(mapList):
+    global window
+    window.evaluate_js(f'updateMapping({mapList})')
+
+def keyIn(keyName):
+    global window
+    print("in", keyName)
+    window.evaluate_js(f'keyIn("{keyName}")')
+
+def keyOut(keyName):
+    global window
+    print("out", keyName)
+    window.evaluate_js(f'keyOut("{keyName}")')
 
 def updateJSON():
     try:
@@ -51,7 +72,7 @@ def updateJSON():
                     file.write(f'  "{key}": {json_value},\n')
                 else:
                     file.write(f'  "{key}": {json_value}\n')
-            file.write('}\n')
+            file.write('}\n') 
 
     except requests.exceptions.ConnectionError as e:
         notification.notify(title='Internet Connection Error', message="Uh-oh! This program can not extract the latest set of keymappings due to an internet issue. Don't worry! It'll still run the last set of keymappings.", app_icon= "icon.ico", timeout=10)
