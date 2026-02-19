@@ -28,6 +28,7 @@ class ahkhandler:
         self.keyboard.add_hotkey('enter', self.keyboardEnter)
         self.keyboard.add_hotkey('ctrl+a', self.keyboardSelectAll)
         self.keyboard.add_hotkey('ctrl+backspace', self.keyboardClearWord)
+        self.keyboard.add_hotkey('esc', self.keyboardEsc)
 
         self.keyboard.on_press_key('backspace', lambda e: self.keyIn('backspace'))
         self.keyboard.on_release_key('backspace', lambda e: self.keyOut('backspace'))
@@ -216,6 +217,12 @@ class ahkhandler:
 
         self.buffer = s[:i]
         self.setRefChar()
+
+    def keyboardEsc(self):
+        self.buffer = ""
+
+        self.setRefChar()
+        
 
     def mouseClick(self):
         self.allSelected = False;
