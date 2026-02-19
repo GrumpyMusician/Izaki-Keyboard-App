@@ -1,5 +1,6 @@
 from ahk import AHK
 import keyboard
+import mouse
 
 class ahkhandler:
     def __init__(self, data, sendMode, sendMaps, keyIn, keyOut, setLoad, setIdle):
@@ -13,7 +14,9 @@ class ahkhandler:
 
         self.ahk = AHK()
         self.keyboard = keyboard
+        self.mouse = mouse
         self.refChar = "μ" # μ - System, λ - Latinized, δ - Askaoza, φ - Byakuzhi; Not all matter tho, some put in for fun ;)
+        self.allSelected = False
 
         self.buffer = ""
 
@@ -22,6 +25,9 @@ class ahkhandler:
         
         self.keyboard.add_hotkey('left shift+right shift', self.incrementMode)
         self.keyboard.add_hotkey('backspace', self.keyboardBackspace)
+        self.keyboard.add_hotkey('enter', self.keyboardEnter)
+        self.keyboard.add_hotkey('ctrl+a', self.keyboardSelectAll)
+        self.keyboard.add_hotkey('ctrl+backspace', self.keyboardClearWord)
 
         self.keyboard.on_press_key('backspace', lambda e: self.keyIn('backspace'))
         self.keyboard.on_release_key('backspace', lambda e: self.keyOut('backspace'))
@@ -29,10 +35,13 @@ class ahkhandler:
         self.keyboard.on_release_key('caps lock', lambda e: self.keyOut('caps lock'))
         self.keyboard.on_press_key('enter', lambda e: self.keyIn('enter'))
         self.keyboard.on_release_key('enter', lambda e: self.keyOut('enter'))
+
         self.keyboard.on_press_key('left shift', lambda e: self.keyboardShift(True, True))
         self.keyboard.on_release_key('left shift', lambda e: self.keyboardShift(True, False))
         self.keyboard.on_press_key('right shift', lambda e: self.keyboardShift(False, True))
         self.keyboard.on_release_key('right shift', lambda e: self.keyboardShift(False, False))
+
+        self.mouse.on_click(self.mouseClick)
 
         #print("start")
 
@@ -107,6 +116,7 @@ class ahkhandler:
                     break
 
         self.sendMode(self.mode)
+        print("Refchar: " + self.refChar, "; Buffer: " + self.buffer)
 
     def setBopprehKeys(self):
         for key in self.data["λ"]:
@@ -130,7 +140,7 @@ class ahkhandler:
             if not key.strip():
                 continue
 
-            if key == ";": #semicolon key being weird, so we have to modify it and it specifically:
+            if key == ";": #semicolon key being weird, so we have to key it in and out manually:
                 self.ahk.add_hotkey("`;", callback=lambda e=None, k=key: self.inject(k))
                 self.ahk.add_hotkey("`; up", callback=lambda e=None, k=key: self.keyOut(k))
             else:
@@ -163,7 +173,52 @@ class ahkhandler:
             self.setRefChar()
 
     def keyboardBackspace(self):
-        self.buffer = self.buffer[:-1]
+        if self.allSelected:
+            self.buffer = ""
+            self.allSelected = False
+        else:
+            self.buffer = self.buffer[:-1]
+
+        self.setRefChar()
+
+    def keyboardEnter(self):
+        self.buffer += "\n"
+        self.setRefChar()
+
+    def keyboardSelectAll(self):
+        self.allSelected = True;
+    
+    def keyboardClearWord(self):
+        s = self.buffer
+        i = len(s)
+
+        if i == 0:
+            return
+
+        def char_type(c):
+            if c.isspace():
+                return "space"
+            elif c.isalnum() or c == "_":
+                return "word"
+            else:
+                return "symbol"
+
+        while i > 0 and s[i - 1].isspace():
+            i -= 1
+
+        if i == 0:
+            self.buffer = ""
+            return
+
+        t = char_type(s[i - 1])
+        while i > 0 and char_type(s[i - 1]) == t:
+            i -= 1
+
+        self.buffer = s[:i]
+        self.setRefChar()
+
+    def mouseClick(self):
+        self.allSelected = False;
         self.setRefChar()
 
     def keyboardShift(self, isLeftShift, isPressing):
