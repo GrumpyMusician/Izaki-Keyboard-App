@@ -3,8 +3,10 @@ import keyboard
 import mouse
 
 class ahkhandler:
-    def __init__(self, data, sendMode, sendMaps, keyIn, keyOut, setLoad, setIdle):
-        self.data = data
+    def __init__(self, dataCharacters, dataByakuzhi, dataCompounds, sendMode, sendMaps, keyIn, keyOut, setLoad, setIdle):
+        self.dataCharacters = dataCharacters
+        self.dataByakuzhi = dataByakuzhi
+        self.dataCompounds = dataCompounds
         self.sendMode = sendMode
         self.sendMaps = sendMaps
         self.keyIn = keyIn
@@ -23,7 +25,8 @@ class ahkhandler:
         # Mode modifiers and whatnot
         self.mode = 0 # 0 = System Keyboard, 1 = Latinized, 2 = Askaoza, 3 = Byakuzhi
         
-        self.keyboard.add_hotkey('left shift+right shift', self.incrementMode)
+        self.keyboard.add_hotkey('left shift+right shift', lambda: self.changeMode(True))
+        #self.keyboard.add_hotkey('ctrl+left shift+right shift', lambda: self.changeMode(False)) #is broken
         self.keyboard.add_hotkey('backspace', self.keyboardBackspace)
         self.keyboard.add_hotkey('enter', self.keyboardEnter)
         self.keyboard.add_hotkey('ctrl+a', self.keyboardSelectAll)
@@ -55,11 +58,18 @@ class ahkhandler:
         self.setLoad(0)
         self.setIdle(1)
 
-    def incrementMode(self):
-        if self.mode == 3:
-            self.mode = 0
+    def changeMode(self, isForward):
+        if isForward:
+            if self.mode == 3:
+                self.mode = 0
+            else:
+                self.mode += 1
+            
         else:
-            self.mode += 1
+            if self.mode == 0:
+                self.mode = 3
+            else:
+                self.mode -= 1
 
         if self.mode == 0:
             self.refChar = "μ"
@@ -101,10 +111,10 @@ class ahkhandler:
                 elif self.ahk.key_state("RShift"):
                     self.keyboardShift(False, True)
                 else:
-                    self.sendMaps(self.data[self.refChar])
+                    self.sendMaps(self.dataCharacters[self.refChar])
         
         else:
-            for key in self.data:
+            for key in self.dataCharacters:
                 if self.buffer.endswith(key):
                     self.refChar = key
 
@@ -113,14 +123,14 @@ class ahkhandler:
                     elif self.ahk.key_state("RShift"):
                         self.keyboardShift(False, True)
                     else:
-                        self.sendMaps(self.data[self.refChar])
+                        self.sendMaps(self.dataCharacters[self.refChar])
                     break
 
         self.sendMode(self.mode)
         print("Refchar: " + self.refChar, "; Buffer: " + self.buffer)
 
     def setBopprehKeys(self):
-        for key in self.data["λ"]:
+        for key in self.dataCharacters["λ"]:
             if not key.strip():
                 continue
 
@@ -129,7 +139,7 @@ class ahkhandler:
                 self.keyboard.on_release_key(key, lambda e, k=key: self.keyOut(k))
 
     def clearBopprehKeys(self): 
-        for key in self.data["λ"]:
+        for key in self.dataCharacters["λ"]:
             if not key.strip():
                 continue
 
@@ -137,7 +147,7 @@ class ahkhandler:
                 self.keyboard.unhook_key(key)
 
     def setHotKeys(self):
-        for key in self.data["λ"]:
+        for key in self.dataCharacters["λ"]:
             if not key.strip():
                 continue
 
@@ -149,18 +159,18 @@ class ahkhandler:
                 self.ahk.add_hotkey(f"{key} up", callback=lambda e=None, k=key: self.keyOut(k))
 
     def inject(self, key):
-        #print(key, "|", self.data[self.refChar][key], "|", self.buffer, "|", self.refChar)
+        #print(key, "|", self.dataCharacters[self.refChar][key], "|", self.buffer, "|", self.refChar)
 
         self.keyIn(key)        
 
         if self.mode == 1 or self.mode == 2:
             try:
-                value = self.data[self.refChar][key]
+                value = self.dataCharacters[self.refChar][key]
             except:
                 if self.mode == 1:
-                    value = self.data["λ"][key]
+                    value = self.dataCharacters["λ"][key]
                 elif self.mode == 2:
-                    value = self.data["δ"][key]
+                    value = self.dataCharacters["δ"][key]
                 
 
             self.keyboard.write('\b' * int(value[-1]))
@@ -187,7 +197,7 @@ class ahkhandler:
         self.setRefChar()
 
     def keyboardSelectAll(self):
-        self.allSelected = True;
+        self.allSelected = True
     
     def keyboardClearWord(self):
         s = self.buffer
@@ -222,10 +232,9 @@ class ahkhandler:
         self.buffer = ""
 
         self.setRefChar()
-        
 
     def mouseClick(self):
-        self.allSelected = False;
+        self.allSelected = False
         self.setRefChar()
 
     def keyboardShift(self, isLeftShift, isPressing):
@@ -249,7 +258,7 @@ class ahkhandler:
             else:
                 self.keyIn('right shift')
 
-            d = self.data[self.refChar]
+            d = self.dataCharacters[self.refChar]
             keys = list(d.keys())
             new_map = {}
 
@@ -271,4 +280,4 @@ class ahkhandler:
                 self.keyOut('left shift')
             else:
                 self.keyOut('right shift')
-            self.sendMaps(self.data[self.refChar])
+            self.sendMaps(self.dataCharacters[self.refChar])
