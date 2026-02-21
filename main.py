@@ -6,6 +6,7 @@ from plyer import notification
 import ahkhandler
 import threading
 import webview
+import re
 
 window = None
 
@@ -153,5 +154,5 @@ def getCompounds():
         data = json.load(file)
 
     return data
-    
+
 main()

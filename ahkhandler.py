@@ -17,7 +17,7 @@ class ahkhandler:
         self.ahk = AHK()
         self.keyboard = keyboard
         self.mouse = mouse
-        self.refChar = "μ" # μ - System, λ - Latinized, δ - Askaoza, φ - Byakuzhi; Not all matter tho, some put in for fun ;)
+        self.refChar = "μ" # μ - System, λ - Latinized, δ - Askaoza, φ - Byakuzhi;
         self.allSelected = False
 
         self.buffer = ""
@@ -25,12 +25,12 @@ class ahkhandler:
         # Mode modifiers and whatnot
         self.mode = 0 # 0 = System Keyboard, 1 = Latinized, 2 = Askaoza, 3 = Byakuzhi
         
-        self.keyboard.add_hotkey('left shift+right shift', lambda: self.changeMode(True))
-        #self.keyboard.add_hotkey('ctrl+left shift+right shift', lambda: self.changeMode(False)) #is broken
-        self.keyboard.add_hotkey('backspace', self.keyboardBackspace)
+        self.ahk.add_hotkey('~Backspace', self.keyboardBackspace)
+        self.ahk.add_hotkey('~^Backspace', self.keyboardClearWord)
+        
+        self.keyboard.add_hotkey('left shift + right shift', self.incrementMode)
         self.keyboard.add_hotkey('enter', self.keyboardEnter)
         self.keyboard.add_hotkey('ctrl+a', self.keyboardSelectAll)
-        self.keyboard.add_hotkey('ctrl+backspace', self.keyboardClearWord)
         self.keyboard.add_hotkey('esc', self.keyboardEsc)
 
         self.keyboard.on_press_key('backspace', lambda e: self.keyIn('backspace'))
@@ -58,22 +58,18 @@ class ahkhandler:
         self.setLoad(0)
         self.setIdle(1)
 
-    def changeMode(self, isForward):
-        if isForward:
-            if self.mode == 3:
-                self.mode = 0
-            else:
-                self.mode += 1
-            
+    def incrementMode(self):
+        if self.mode == 3:
+            self.mode = 0
         else:
-            if self.mode == 0:
-                self.mode = 3
-            else:
-                self.mode -= 1
+            self.mode += 1
 
         if self.mode == 0:
-            self.refChar = "μ"
+            self.setLoad(1)
+            self.ahk.stop_hotkeys()
             self.setBopprehKeys()
+            self.refChar = "μ"
+            self.setLoad(0)
             self.setIdle(1)
         elif self.mode == 1:
             self.clearBopprehKeys()
@@ -83,12 +79,7 @@ class ahkhandler:
         elif self.mode == 2:
             self.refChar = "δ"
         elif self.mode == 3:
-            self.setLoad(1)
             self.refChar = "φ"
-            self.ahk.stop_hotkeys()
-            self.setBopprehKeys()
-            self.setLoad(0)
-            self.setIdle(1)
 
         self.buffer = ""
         self.setRefChar()
@@ -127,7 +118,6 @@ class ahkhandler:
                     break
 
         self.sendMode(self.mode)
-        print("Refchar: " + self.refChar, "; Buffer: " + self.buffer)
 
     def setBopprehKeys(self):
         for key in self.dataCharacters["λ"]:
