@@ -3,7 +3,7 @@ import keyboard
 import mouse
 
 class ahkhandler:
-    def __init__(self, dataCharacters, dataByakuzhi, dataCompounds, sendMode, sendMaps, keyIn, keyOut, setLoad, setIdle):
+    def __init__(self, dataCharacters, dataByakuzhi, dataCompounds, sendMode, sendMaps, keyIn, keyOut, setLoad, setIdle, setTextbar, clearTextbar):
         self.dataCharacters = dataCharacters
         self.dataByakuzhi = dataByakuzhi
         self.dataCompounds = dataCompounds
@@ -13,6 +13,8 @@ class ahkhandler:
         self.keyOut = keyOut
         self.setLoad = setLoad
         self.setIdle = setIdle
+        self.setTextbar = setTextbar
+        self.clearTextbar = clearTextbar
 
         self.ahk = AHK()
         self.keyboard = keyboard

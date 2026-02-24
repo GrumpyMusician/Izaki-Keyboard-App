@@ -72,6 +72,12 @@ window.updateMapping = function(keyMap){
     }
 };
 
+window.setTextbar = function(text){
+    try {
+        document.getElementById("textbar").textContent = text;
+    } catch (error){}
+}
+
 function removeLeadingPlus(key) {
     if (key.startsWith("+")) {
         return key.slice(1);

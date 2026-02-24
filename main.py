@@ -20,7 +20,7 @@ def main():
     runwebview()
 
 def runhandler():
-    ahkhandler.ahkhandler(getCharacters(), getByakuzhi(), getCompounds(), sendMode, sendMaps, keyIn, keyOut, setLoad, setIdle)
+    ahkhandler.ahkhandler(getCharacters(), getByakuzhi(), getCompounds(), sendMode, sendMaps, keyIn, keyOut, setLoad, setIdle, setTextbar, clearTextbar)
     
 def runwebview():
     global window
@@ -46,6 +46,14 @@ def keyIn(keyName):
 def keyOut(keyName):
     global window
     window.evaluate_js(f'keyOut("{keyName}")')
+
+def setTextbar(text):
+    global window
+    window.evaluate_js(f'setTextbar("{text}")')
+
+def clearTextbar():
+    global window
+    window.evaluate_js('setTextbar("")')
 
 def setLoad(hide):
     global window
